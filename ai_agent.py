@@ -1,10 +1,13 @@
+import os
 import requests
 import json
 import re
 from datetime import date, datetime
 from typing import Dict, List, Optional
 
-from langchain_community.chat_models import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+#from langchain_community.chat_models import ChatOllama
 
 # ---------------- CONFIG ----------------
 
@@ -13,8 +16,13 @@ TOOL_SERVER = "http://127.0.0.1:3333/tools"
 print("Flight Booking Assistant (AI + MCP + Java Backend)")
 print("Type 'exit' to quit\n")
 
-llm = ChatOllama(
-    model="llama3.1:8b",
+# llm = ChatOllama(
+#     model="llama3.1:8b",
+#     temperature=0
+# )
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.5-flash",
     temperature=0
 )
 
@@ -253,7 +261,7 @@ while True: #It cannot scale, I should be able to scale it with diff features.
             print("\nBooking Confirmed!")
             print("Booking Reference:", result["bookingReference"])
         else:
-            print("❌ Booking failed:", result)
+            print(" Booking failed:", result)
 
         # reset
         conversation_state = "IDLE"
@@ -263,13 +271,19 @@ while True: #It cannot scale, I should be able to scale it with diff features.
     # ---------- CHAT ----------
     else:
         safe_prompt = f"""
-You are a FLIGHT BOOKING ASSISTANT.
+You are a helpful, friendly general AI assistant.
 
-Rules:
-- Do NOT roleplay
-- Do NOT invent prices or airlines
-- Keep responses short
-- Guide user to search or booking
+You can:
+- Chat normally if the user is just talking
+- Answer general questions
+- Be polite and concise
+
+ONLY talk about flight booking IF the user clearly asks about:
+- searching flights
+- booking flights
+- travel plans
+
+If the message is unrelated, respond naturally.
 
 User message:
 "{user_input}"
